@@ -106,33 +106,25 @@ def is_lambda_expression(name: str) -> bool:
 
 
 def callable_to_string(value: Callable) -> str:
-    """Converts a callable object to a string.
-
-    Args:
-        value: A callable object.
-
-    Raises:
-        ValueError: When the input argument is not a callable object.
-
-    Returns:
-        A string representation of the callable object.
-    """
-    # check if callable
+    """Converts a callable object to a string."""
     if not callable(value):
         raise ValueError(f"The input argument is not callable: {value}.")
-    # check if lambda function
-    if value.__name__ == "<lambda>":
-        # we resolve the lambda expression by checking the source code and extracting the line with lambda expression
-        # we also remove any comments from the line
+
+    # Special handling for lambda functions
+    if hasattr(value, "__name__") and value.__name__ == "<lambda>":
         lambda_line = inspect.getsourcelines(value)[0][0].strip().split("lambda")[1].strip().split(",")[0]
         lambda_line = re.sub(r"#.*$", "", lambda_line).rstrip()
         return f"lambda {lambda_line}"
-    else:
-        # get the module and function name
+
+    # Handle regular functions and callable objects
+    if hasattr(value, "__name__"):
         module_name = value.__module__
         function_name = value.__name__
-        # return the string
-        return f"{module_name}:{function_name}"
+    else:
+        module_name = value.__class__.__module__
+        function_name = value.__class__.__name__
+
+    return f"{module_name}:{function_name}"
 
 
 def string_to_callable(name: str) -> Callable:
